@@ -1,0 +1,98 @@
+ciscoasa#sh run
+: Saved
+:
+ASA Version 9.6(1)
+!
+hostname ciscoasa
+names
+!
+interface GigabitEthernet1/1
+ nameif outside
+ security-level 0
+ ip address 17.16.200.2 255.255.255.0
+!
+interface GigabitEthernet1/2
+ nameif inside
+ security-level 100
+ ip address 10.10.10.1 255.255.255.0
+!
+interface GigabitEthernet1/3
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+interface GigabitEthernet1/4
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+interface GigabitEthernet1/5
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+interface GigabitEthernet1/6
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+interface GigabitEthernet1/7
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+interface GigabitEthernet1/8
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+interface Management1/1
+ management-only
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+!
+route outside 0.0.0.0 0.0.0.0 17.16.200.1 1
+!
+access-list OUTSIDE_TO_INSIDE extended permit icmp 192.168.2.0 255.255.255.0 10.10.10.0 255.255.255.0
+access-list OUTSIDE_TO_INSIDE extended permit icmp 192.168.3.0 255.255.255.0 10.10.10.0 255.255.255.0
+access-list OUTSIDE_TO_INSIDE extended permit icmp 192.168.3.0 255.255.255.0 10.10.10.0 255.255.255.0 echo-reply
+access-list OUTSIDE_TO_INSIDE extended permit icmp 192.168.2.0 255.255.255.0 10.10.10.0 255.255.255.0 echo-reply
+!
+!
+access-group OUTSIDE_TO_INSIDE in interface outside
+!
+!
+class-map inspection_default
+ match default-inspection-traffic
+!
+policy-map type inspect dns preset_dns_map
+ parameters
+  message-length maximum 512
+policy-map global_policy
+ class inspection_default
+  inspect dns preset_dns_map
+  inspect ftp 
+  inspect tftp 
+!
+service-policy global_policy global
+!
+telnet timeout 5
+ssh timeout 5
+!
+!
+!
+!
+router ospf 1
+ log-adjacency-changes
+ network 17.16.200.0 255.255.255.0 area 0
+ network 10.10.10.0 255.255.255.0 area 0
+!
