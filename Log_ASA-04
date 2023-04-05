@@ -1,0 +1,115 @@
+ciscoasa#
+ciscoasa#sh run
+: Saved
+:
+ASA Version 9.6(1)
+!
+hostname ciscoasa
+names
+!
+interface GigabitEthernet1/1
+ nameif outside
+ security-level 0
+ ip address 100.0.0.100 255.255.255.0
+!
+interface GigabitEthernet1/2
+ nameif inside
+ security-level 100
+ ip address 172.16.34.1 255.255.255.0
+!
+interface GigabitEthernet1/3
+ nameif dmz
+ security-level 50
+ ip address 17.16.200.1 255.255.255.0
+!
+interface GigabitEthernet1/4
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+interface GigabitEthernet1/5
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+interface GigabitEthernet1/6
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+interface GigabitEthernet1/7
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+interface GigabitEthernet1/8
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+interface Management1/1
+ management-only
+ no nameif
+ no security-level
+ no ip address
+ shutdown
+!
+object network INSIDE-OUTSIDE-NAT
+ subnet 192.168.3.0 255.255.255.0
+ nat (inside,outside) dynamic interface
+ description NAT inside to outside
+object network INSIDE-vlan20-OUTSIDE-NAT
+ subnet 192.168.2.0 255.255.255.0
+ nat (inside,outside) dynamic interface
+object network INSIDE-vlan50-OUTSIDE-NAT
+ subnet 192.168.5.0 255.255.255.0
+ nat (inside,outside) dynamic interface
+object network NAT-DMZ-OUTSIDE
+ host 10.10.10.100
+ nat (dmz,outside) static 100.0.0.100
+ description NAT DMZ to outside
+!
+route inside 0.0.0.0 0.0.0.0 172.16.34.2 1
+!
+access-list OUTSIDE extended deny icmp any any echo
+access-list OUTSIDE extended permit icmp any any echo-reply
+access-list OUTSIDE extended permit tcp any 10.10.10.0 255.255.255.0 eq www
+access-list OUTSIDE extended permit udp any 10.10.10.0 255.255.255.0 eq domain
+access-list DMZ extended permit ip any any
+!
+!
+access-group OUTSIDE in interface outside
+access-group DMZ in interface dmz
+!
+!
+class-map inspection_default
+ match default-inspection-traffic
+!
+policy-map type inspect dns preset_dns_map
+ parameters
+  message-length maximum 512
+policy-map global_policy
+ class inspection_default
+  inspect dns preset_dns_map
+  inspect ftp 
+  inspect tftp 
+!
+service-policy global_policy global
+!
+telnet timeout 5
+ssh timeout 5
+!
+!
+!
+!
+router ospf 1
+ log-adjacency-changes
+ network 100.0.0.0 255.255.255.0 area 0
+ network 172.16.34.0 255.255.255.0 area 0
+ network 17.16.200.0 255.255.255.0 area 0
+!
